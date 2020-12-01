@@ -1,5 +1,6 @@
 -- less concepts:
 -- cellular automata sequencer
+-- A CHANGE!
 -- v2.1.2 (crow) @dan_derks
 -- llllllll.co/t/less-concepts/
 -- 
