@@ -8,6 +8,7 @@ help = include 'lib/helpers'
 parameters = include 'lib/parameters'
 get = include 'lib/gets'
 set = include 'lib/sets'
+fn = include 'lib/fn'
 
 function new_stream(id)
   stream[id] = ca.new()
@@ -25,13 +26,19 @@ end
 function iterate(target)
   print(get.current_seed(stream[1]:window(voice[1].window)), table.concat(stream[1].state))
   redraw()
-  for i = 1,2 do
+  for i = 1,#voice do
     if target.state[get.bit(i)] == 1 then
       -- notes_off(1)
       -- print(get.current_seed(stream[1]:window(voice[i].window)))
       local note = notes[note_pool][help.scale(get.low_note(i),get.high_note(i),math.abs(get.current_seed(stream[1]:window(get.window(i)))),voice[i])]
       if note ~= nil then
-        engine.noteOn(i,help.midi_to_hz((note)+(48+(voice[i].octave * 12))),127)
+        -- JF
+        -- make velocity dynamic
+        if params:get("output_"..i) == 1 then
+          engine.noteOn(i,help.midi_to_hz((note)+(48+(voice[i].octave * 12))),127)
+        elseif params:get("output_"..i) == 2 then
+          crow.ii.jf.play_note((note+(voice[i].octave * 12))/12,5)
+        end
       end
       -- table.insert(voice[1].active_notes,note)
     end
@@ -72,6 +79,16 @@ end
 
 function init()
 
+  voice = {}
+  for i = 1,2 do
+    voice[i] = {}
+    voice[i].octave = 0
+    voice[i].bit = 0
+    voice[i].low = 1
+    voice[i].high = 14
+    voice[i].window = 8 -- shouldn't go larger than 32
+  end
+
   parameters.init()
 
   stream = {}
@@ -99,22 +116,12 @@ function init()
           {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28} }
   note_names = {"ionian","aeolian", "dorian", "phrygian", "lydian", "mixolydian", "minor_pent", "major_pent", "shang", "jiao", "zhi", "todi", "purvi", "marva", "bhairav", "ahirbhairav", "chromatic"}
   note_pool = 1
-  
-  voice = {}
-  for i = 1,2 do
-    voice[i] = {}
-    voice[i].octave = 0
-    voice[i].bit = 0
-    voice[i].low = 1
-    voice[i].high = 14
-    voice[i].window = 8 -- shouldn't go larger than 32
-  end
 
   y_offset = {0,0}
   screen_cycle = {"down","up"}
 
   passersby.add_params()
-  
+
   go = clock.run(main_clock)
 end
 

@@ -5,7 +5,7 @@ function parameters.init()
 
   local p_add =
   {
-    {"voice","bit",0,128,0}  
+    {"voice","bit",0,128,0}
   , {"voice","window",1,128,128}
   , {"voice","low",1,29,1}
   , {"voice","high",1,29,14}
@@ -34,6 +34,27 @@ function parameters.init()
       -- params:set("seed",256,true)
     -- end
   end)
+
+  params:add_option("jfmode", "JF mode", {"off", "on"}, 1)
+  params:set_action("jfmode", function(x)
+    if x == 2 then
+      crow.ii.jf.mode(1)
+    else
+      crow.ii.jf.mode(0)
+    end
+  end)
+
+  local outputs = {}
+  outputs.voice_destination = {}
+  for i = 1,#voice do
+    outputs.voice_destination[i] = {"passersby", "crow ii JF"} -- change below if change here
+  end
+
+  for i = 1, #outputs.voice_destination do
+    params:add{type = "option", id = "output_"..i, name = "output "..i,
+      options = outputs.voice_destination[i],
+    }
+  end
 
   for i = 1,2 do
     params:add_separator("voice "..i)
