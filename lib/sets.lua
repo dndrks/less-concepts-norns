@@ -39,4 +39,17 @@ function set.window(voice_id,width)
   voice[voice_id].window = util.clamp(1,32,width)
 end
 
+function set.velocity(voice_id,vel)
+  voice[voice_id].velocity = vel
+end
+
+function set.midichannel(voice_id,ch)
+  voice[voice_id].midichannel = ch
+end
+
+function set.mididevice(voice_id,d)
+  voice[voice_id].mididevice = d
+  voice[voice_id].midi = midi.connect(d)
+end
+
 return set

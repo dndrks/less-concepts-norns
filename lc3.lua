@@ -32,12 +32,21 @@ function iterate(target)
       -- print(get.current_seed(stream[1]:window(voice[i].window)))
       local note = notes[note_pool][help.scale(get.low_note(i),get.high_note(i),math.abs(get.current_seed(stream[1]:window(get.window(i)))),voice[i])]
       if note ~= nil then
-        -- JF
         -- make velocity dynamic
-        if params:get("output_"..i) == 1 then
-          engine.noteOn(i,help.midi_to_hz((note)+(48+(voice[i].octave * 12))),127)
-        elseif params:get("output_"..i) == 2 then
-          crow.ii.jf.play_note((note+(voice[i].octave * 12))/12,5)
+        if params:get("output_"..i) == 1 then -- engine
+          engine.noteOn(i,help.midi_to_hz((note)+(48+(voice[i].octave * 12))),voice[i].velocity)
+        elseif params:get("output_"..i) == 2 then -- just friends
+          crow.ii.jf.play_note((note+(voice[i].octave * 12))/12,10*(voice[i].velocity/127))
+        elseif params:get("output_"..i) == 3 then -- crow 1/2
+          crow.output[1].volts = ((note + voice[i].octave * 12)/12)
+          crow.output[2].action = "{to("..util.clamp(10*(voice[i].velocity/127),5,10)..",0),to(0,0.25)}" --dynamic gate
+          crow.output[2].execute()
+        elseif params:get("output_"..i) == 4 then -- crow 3/4
+          crow.output[3].volts = ((note + voice[i].octave * 12)/12)
+          crow.output[4].action = "{to("..util.clamp(10*(voice[i].velocity/127),5,10)..",0),to(0,0.25)}" --dynamic gate
+          crow.output[4].execute()
+        elseif params:get("output_"..i) == 5 then -- midi
+          voice[i].midi:note_on(48 + note + voice[i].octave * 12,voice[i].velocity,voice[i].midichannel)
         end
       end
       -- table.insert(voice[1].active_notes,note)
@@ -86,7 +95,11 @@ function init()
     voice[i].bit = 0
     voice[i].low = 1
     voice[i].high = 14
-    voice[i].window = 8 -- shouldn't go larger than 32
+    voice[i].window = 8 -- shouldn't go larger than 32 (16?)
+    voice[i].velocity = 100
+    voice[i].midichannel = 0
+    voice[i].mididevice = 1
+    voice[i].midi = midi.connect()
   end
 
   parameters.init()
@@ -103,8 +116,8 @@ function init()
           {0,1,3,5,7,8,10,12,13,15,17,19,20,22,24,25,27,29,31,32,34,36,37,39,41,43,44,46,48},
           {0,2,4,6,7,9,11,12,14,16,18,19,21,23,24,26,28,30,31,33,35,36,38,40,42,43,45,47,48},
           {0,2,4,5,7,9,10,12,14,16,17,19,21,22,24,26,28,29,31,33,34,36,38,40,41,43,45,46,48},
-          {0,3,5,7,10,12,15,17,19,22,24,27,29,31,34,36,39,41,43,46,48,51,53,55,58,60,63,65,67},
           {0,2,4,7,9,12,14,16,19,21,24,26,28,31,33,36,38,40,43,45,48,50,52,55,57,60,62,64,67},
+          {0,3,5,7,10,12,15,17,19,22,24,27,29,31,34,36,39,41,43,46,48,51,53,55,58,60,63,65,67},
           {0,2,5,7,10,12,14,17,19,22,24,26,29,31,34,36,38,41,43,46,48,50,53,55,58,60,62,65,67},
           {0,3,5,8,10,12,15,17,20,22,24,27,29,32,34,36,39,41,44,46,48,51,53,56,58,60,63,65,68},
           {0,2,5,7,9,12,14,17,19,21,24,26,29,31,33,36,38,41,43,45,48,50,53,55,57,60,62,65,67},
@@ -114,7 +127,7 @@ function init()
           {0,1,4,5,7,8,11,12,13,16,17,19,20,23,24,25,28,29,31,32,35,36,37,40,41,43,44,47,48},
           {0,1,4,5,7,9,10,12,13,16,17,19,21,22,24,25,28,29,31,33,35,36,37,40,41,43,45,47,48},
           {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28} }
-  note_names = {"ionian","aeolian", "dorian", "phrygian", "lydian", "mixolydian", "minor_pent", "major_pent", "shang", "jiao", "zhi", "todi", "purvi", "marva", "bhairav", "ahirbhairav", "chromatic"}
+  note_names = {"ionian","aeolian", "dorian", "phrygian", "lydian", "mixolydian", "major_pent", "minor_pent", "shang", "jiao", "zhi", "todi", "purvi", "marva", "bhairav", "ahirbhairav", "chromatic"}
   note_pool = 1
 
   y_offset = {0,0}
